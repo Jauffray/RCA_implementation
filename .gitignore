@@ -1,0 +1,18 @@
+# Ignore python local caching files
+__pycache__
+**.idea
+# Ignore notebook checkpoints
+**.ipynb_checkpoints
+# Do not push data
+data
+missing_masks_publish
+# Do not push pytorch models
+**.pth
+# Do not push predictions
+**.png
+**.jpg
+**.npy
+# Do not push pdfs (who knows)
+**.pdf
+# Do not push config files
+**.config

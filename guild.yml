@@ -1,0 +1,226 @@
+- model: vessel_segmentation
+  description: Retinal Vessel Segmentation
+  sourcecode:
+    # Source code config at the model level applies to all
+    # operations. In this case we want to copy all of the text files
+    # (the default configuration) but exclude everything under 'data'.
+    - exclude: 'data/*'
+    - exclude: 'experiments/*'
+    - exclude: 'results/*'
+
+  operations:
+    train:
+      # The default 'main' attribute is 'train' based on the
+      # operation name. While we could omit this below, it's good
+      # practice to specify it.
+      main: train
+
+      # In this configuration, we require the project 'data'
+      # directory. Guild creates a symbolic link named 'data' to
+      # this directory in each run directory for the operation.
+      requires:
+        - file: data
+        - file: experiments
+        - file: results
+        - file: utils
+        - file: generate_results.py
+        - file: analyze_results.py
+        - file: bunch_evaluation.py
+
+    train_warmup:
+      # The default 'main' attribute is 'train' based on the
+      # operation name. While we could omit this below, it's good
+      # practice to specify it.
+      main: train_warmup
+
+      # In this configuration, we require the project 'data'
+      # directory. Guild creates a symbolic link named 'data' to
+      # this directory in each run directory for the operation.
+      requires:
+        - file: data
+        - file: experiments
+        - file: results
+        - file: utils
+        - file: generate_results.py
+        - file: analyze_results.py
+        - file: bunch_evaluation.py
+
+    template-experiment:
+      description:
+        This is a template for an experiment.
+        Write here conclusions.
+      steps:
+        - run: train
+          flags:
+            - layers=[64/128,64/128/256,64/128/256/512,64/128/256/512/1024]
+            - n_classes=[1,2]
+            - in_channels=[1,3]
+            - up_mode=['transp_conv','upconv']
+            - pool_mode=['max_pool','strided_conv','add_strided_conv']
+            - conv_bridge=[True,False]
+            - shortcut=[True,False]
+            - lr=0.001
+            - disable_transforms=[True,False]
+            - eps=[1e-6,1e-8]
+            - batch_size=[2,4]
+            - data_aug=['no','geom','all']
+            - normalize=['from_im_max','from_im','from_dataset']
+            - metric=['auc','loss']
+            - patience=[40,50,60]
+            - scheduler_f=[0.99,0.95,0.9]
+            - n_epochs=[500,1000]
+            - end2end=True
+
+    test-experiment:
+      description:
+        This is a test experiment with one epochs to check this works
+      steps:
+        - run: train
+          flags:
+            - layers=4/8
+            - n_epochs=1
+            - metric='auc'
+            - lr=0.01
+            - end2end=True
+
+    baseline-experiment-old:
+      description:
+        This is an experiment to see how good a plain unet can get. We train 5 models with configs as follows; we
+        consider
+      steps:
+        - run: train_warmup
+          flags:
+            - layers=[8/16/32,4/16/32,4/8/64,4/8/32,4/8/16/32]
+            - end2end=True
+            - scheduler_f=0.95
+
+########################################################################################################################
+    initial_baseline:
+      description:
+        This is an experiment to see how good a plain unet can get. We train 5 models with configs as follows; we
+        consider
+      steps:
+        - run: train
+          flags:
+#            - layers=[8/16/32,4/16/32,4/8/64,4/8/32,4/8/16/32]
+            - layers=8/16/32
+            - lr=[0.01,0.05,0.005]
+            - end2end=True
+            - conv_bridge=False
+            - shortcut=False
+            - patience=100
+            - scheduler_f=0.1
+
+#    initial_baseline-shtc:
+#      description:
+#        This is an experiment to see how good a plain unet can get. We train 5 models with configs as follows; we
+#        consider
+#      steps:
+#        - run: train
+#          flags:
+##            - layers=[8/16/32,4/16/32,4/8/64,4/8/32,4/8/16/32]
+#            - layers=8/16/32
+#            - lr=[0.01,0.05,0.005]
+#            - end2end=True
+#            - conv_bridge=False
+#            - shortcut=True
+#            - patience=100
+#            - scheduler_f=0.1
+#
+#    initial_baseline:
+#      description:
+#        This is an experiment to see how good a plain unet can get. We train 5 models with configs as follows; we
+#        consider
+#      steps:
+#        - run: train
+#          flags:
+##            - layers=[8/16/32,4/16/32,4/8/64,4/8/32,4/8/16/32]
+#            - layers=8/16/32
+#            - lr=[0.01,0.05,0.005]
+#            - end2end=True
+#            - conv_bridge=True
+#            - shortcut=False
+#            - patience=100
+#            - scheduler_f=0.1
+
+    initial_baseline-shtc-cvbr:
+      description:
+        This is an experiment to see how good a plain unet can get. We train 5 models with configs as follows; we
+        consider
+      steps:
+        - run: train
+          flags:
+#            - layers=[8/16/32,4/16/32,4/8/64,4/8/32,4/8/16/32]
+            - layers=8/16/32
+            - lr=[0.01,0.05,0.005]
+            - end2end=True
+            - conv_bridge=True
+            - shortcut=True
+            - patience=100
+            - scheduler_f=0.1
+
+########################################################################################################################
+    base-experiment:
+      description:
+        This is an experiment to see how good a plain unet can get. We train 5 models with configs as follows; we
+        consider
+      steps:
+        - run: train
+          flags:
+            - layers=8/16/32
+            - end2end=True
+            - conv_bridge=False
+            - shortcut=False
+            - lr=0.01
+            - patience=100
+            - scheduler_f=0.1
+
+    conv_bridge-shortcut-experiment:
+      description:
+        To our previously best model we now add conv_bridge and shortcut options
+      steps:
+        - run: train
+          flags:
+            - layers=8/16/32
+            - end2end=True
+            - conv_bridge=True
+            - shortcut=True
+            - lr=[0.01,0.05,0.005]
+#            - lr=0.01
+            - patience=100
+            - scheduler_f=0.1
+########################################################################################################################
+    conv_bridge-experiment:
+      description:
+        To our previously best model we now add conv_bridge and shortcut options
+      steps:
+        - run: train
+          flags:
+            - layers=8/16/32
+            - end2end=True
+            - conv_bridge=True
+            - shortcut=False
+#            - lr=[0.01,0.05,0.005]
+            - lr=0.01
+            - patience=100
+            - scheduler_f=0.1
+
+    shortcut-experiment:
+      description:
+        To our previously best model we now add conv_bridge and shortcut options
+      steps:
+        - run: train
+          flags:
+            - layers=8/16/32
+            - end2end=True
+            - conv_bridge=False
+            - shortcut=True
+#            - lr=[0.01,0.05,0.005]
+            - lr=0.01
+            - patience=100
+            - scheduler_f=0.1
+
+
+
+
+
